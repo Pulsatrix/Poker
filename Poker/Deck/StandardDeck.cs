@@ -8,9 +8,11 @@ namespace Poker.Deck
         private const int SuitCount = 4;
         private const int RankCount = 13;
         internal const int NoOfRankMasks = 1 << RankCount;
+        private const string RankSymbolSet = "23456789TJQKA";
+        private const string SuitSymbolSet = "HDCS";
 
         [DebuggerStepThrough]
-        public StandardDeck() : base(CardCount, SuitCount, RankCount)
+        public StandardDeck() : base(CardCount, RankCount, SuitCount, RankSymbolSet, SuitSymbolSet)
         {
         }
 
@@ -128,9 +130,6 @@ namespace Poker.Deck
         }
 
         [DebuggerStepThrough]
-        public override CardMask ToCardMask(int cardIndex) => CardMaskTable[cardIndex];
-
-        [DebuggerStepThrough]
         public override int ToSuitIndex(CardSuit cardSuit)
         {
             int index;
@@ -186,5 +185,21 @@ namespace Poker.Deck
 
             return cardSuit;
         }
+
+        [DebuggerStepThrough]
+        public override int ToCardIndex(CardRank cardRank, CardSuit cardSuit)
+        {
+            int cardIndex;
+
+            checked
+            {
+                cardIndex = (ToSuitIndex(cardSuit)*RankCount) + ToRankIndex(cardRank);
+            }
+
+            return cardIndex;
+        }
+
+        [DebuggerStepThrough]
+        public override CardMask ToCardMask(int cardIndex) => CardMaskTable[cardIndex];
     }
 }

@@ -17,7 +17,7 @@ namespace Poker.Tests
             for (var cardIndex = 0; cardIndex != deck.NoOfCards; ++cardIndex)
             {
                 var generatedValue = standardTable[cardIndex];
-                var actualValue = deck.ToCardMask(cardIndex);
+                var actualValue = StandardDeck.CardMaskTable[cardIndex];
                 Assert.AreEqual(generatedValue, actualValue);
             }
         }

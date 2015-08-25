@@ -51,6 +51,7 @@
     <!-- A reference to the entire .NET Framework is automatically included -->
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Deck\Card.cs" />
     <Compile Include="Deck\CardMask.cs" />
     <Compile Include="Deck\CardRank.cs" />
     <Compile Include="Deck\CardSuit.cs" />

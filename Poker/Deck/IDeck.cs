@@ -4,17 +4,15 @@
     {
         int NoOfCards { get; }
 
-        int NoOfSuits { get; }
-
         int NoOfRanks { get; }
+
+        int NoOfSuits { get; }
 
         CardRank FirstRank { get; }
 
-        int ToSuitIndex(int cardIndex);
+        string SuitSymbols { get; set; }
 
-        int ToSuitIndex(CardSuit cardSuit);
-
-        CardSuit ToSuit(int suitIndex);
+        string RankSymbols { get; set; }
 
         int ToRankIndex(int cardIndex);
 
@@ -22,6 +20,18 @@
 
         CardRank ToRank(int rankIndex);
 
+        int ToSuitIndex(int cardIndex);
+
+        int ToSuitIndex(CardSuit cardSuit);
+
+        CardSuit ToSuit(int suitIndex);
+
+        int ToCardIndex(CardRank cardRank, CardSuit cardSuit);
+
         CardMask ToCardMask(int cardIndex);
+
+        CardMask Parse(string setOfCardValues);
+
+        bool TryParse(string setOfCardValues, out CardMask cardMask);
     }
 }

@@ -4,14 +4,14 @@ using System.Globalization;
 
 namespace Poker.Deck
 {
-    public struct CardMask : IEquatable<CardMask>
+    public struct CardMask : IEquatable<CardMask>, IFormattable
     {
         public static readonly CardMask Empty = new CardMask(0L);
 
         private readonly long _cardMask;
 
         [DebuggerStepThrough]
-        public CardMask(long cardMask)
+        private CardMask(long cardMask)
         {
             _cardMask = cardMask;
         }
@@ -53,7 +53,29 @@ namespace Poker.Deck
 
         public static CardMask operator >>(CardMask left, int right) => new CardMask(left._cardMask >> right);
 
+        [DebuggerStepThrough]
         public static CardMask RightShift(CardMask left, int right) => left >> right;
+
+        [DebuggerStepThrough]
+        public override bool Equals(object obj) => obj is CardMask && Equals((CardMask) obj);
+
+        [DebuggerStepThrough]
+        public bool Equals(CardMask other) => this == other;
+
+        [DebuggerStepThrough]
+        public override int GetHashCode() => _cardMask.GetHashCode();
+
+        [DebuggerStepThrough]
+        internal int Spades() => (int) (_cardMask & 0xFFFFL);
+
+        [DebuggerStepThrough]
+        internal int Clubs() => (int) ((_cardMask & 0xFFFF0000L) >> 16);
+
+        [DebuggerStepThrough]
+        internal int Diamonds() => (int) ((_cardMask & 0xFFFF00000000L) >> 32);
+
+        [DebuggerStepThrough]
+        internal int Hearts() => (int) ((_cardMask & 0x7FFF000000000000L) >> 48);
 
         /// <summary>
         ///     Checks whether two Card Masks have at least one same card set in both Card Masks.
@@ -68,16 +90,7 @@ namespace Poker.Deck
         ///     <c>true</c> if at least one same card set in both Card Masks.; otherwise, <c>false</c>.
         /// </returns>
         [DebuggerStepThrough]
-        public static bool IsAnySameCardSet(CardMask value1, CardMask value2) => (value1 & value2) != Empty;
-
-        [DebuggerStepThrough]
-        public override bool Equals(object obj) => obj is CardMask && Equals((CardMask) obj);
-
-        [DebuggerStepThrough]
-        public bool Equals(CardMask other) => this == other;
-
-        [DebuggerStepThrough]
-        public override int GetHashCode() => _cardMask.GetHashCode();
+        internal static bool IsAnySameCardSet(CardMask value1, CardMask value2) => (value1 & value2) != Empty;
 
         [DebuggerStepThrough]
         public int NoOfCardsSet()
@@ -97,18 +110,10 @@ namespace Poker.Deck
         }
 
         [DebuggerStepThrough]
-        public int Spades() => (int) (_cardMask & 0xFFFFL);
+        public override string ToString() => ToString(null, CultureInfo.InvariantCulture);
 
         [DebuggerStepThrough]
-        public int Clubs() => (int) ((_cardMask & 0xFFFF0000L) >> 16);
-
-        [DebuggerStepThrough]
-        public int Diamonds() => (int) ((_cardMask & 0xFFFF00000000L) >> 32);
-
-        [DebuggerStepThrough]
-        public int Hearts() => (int) ((_cardMask & 0x7FFF000000000000L) >> 48);
-
-        [DebuggerStepThrough]
-        public override string ToString() => _cardMask.ToString(CultureInfo.InvariantCulture);
+        public string ToString(string format, IFormatProvider formatProvider)
+            => _cardMask.ToString(format, formatProvider);
     }
 }
