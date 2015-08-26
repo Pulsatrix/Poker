@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace Poker.Evaluation
 {
     public class StandardRules : IRules
@@ -13,7 +11,6 @@ namespace Poker.Evaluation
 
         public int NoOfHandTypes { get; }
 
-        [DebuggerStepThrough]
         public int ToHandTypeRank(HandType handType)
         {
             int rank;

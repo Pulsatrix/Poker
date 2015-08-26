@@ -6,7 +6,7 @@ namespace Poker.Evaluation
     {
         private static readonly IRules StandardRules = new StandardRules();
 
-        public int Evaluate(CardMask cardMask, int noOfCards)
+        public int Evaluate(CardMask cardMask, int noOfCardsToEvaluate)
         {
             var handValue = HandValue.Nothing;
 
@@ -17,7 +17,7 @@ namespace Poker.Evaluation
             var ranks = sc | sd | sh | ss;
 
             var rankCount = BitsTable[ranks];
-            var duplicateCount = noOfCards - rankCount;
+            var duplicateCount = noOfCardsToEvaluate - rankCount;
 
             // Check for straight, flush, or straight flush, and return if we can determine
             // immediately that this is the best possible hand.

@@ -4,6 +4,6 @@ namespace Poker.Evaluation
 {
     interface IEvaluator
     {
-        int Evaluate(CardMask cardMask, int noOfCards);
+        int Evaluate(CardMask cardMask, int noOfCardsToEvaluate);
     }
 }

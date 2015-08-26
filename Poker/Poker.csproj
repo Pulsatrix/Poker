@@ -59,6 +59,9 @@
     <Compile Include="Deck\IDeck.cs" />
     <Compile Include="Enumeration\RandomEnumerator.cs" />
     <Compile Include="Enumeration\ExhaustiveEnumerator.cs" />
+    <Compile Include="Equity\EquityCalculator.cs" />
+    <Compile Include="Equity\HoldemEquitySettings.cs" />
+    <Compile Include="Equity\IEquitySettings.cs" />
     <Compile Include="Evaluation\HandType.cs" />
     <Compile Include="Evaluation\IRules.cs" />
     <Compile Include="Evaluation\StandardEvaluator.BitsTable.cs" />

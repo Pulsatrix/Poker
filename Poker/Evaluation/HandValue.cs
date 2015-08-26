@@ -1,7 +1,17 @@
-﻿namespace Poker.Evaluation
+﻿using System;
+using System.Globalization;
+using Poker.Deck;
+
+namespace Poker.Evaluation
 {
-    public static class HandValue
+    public struct HandValue : IEquatable<HandValue>, IFormattable
     {
+        private static readonly IRules StandardRules = new StandardRules();
+        private static readonly IDeck StandardDeck = new StandardDeck();
+
+        public static readonly int NothingLow = FromHandTypeRank(StandardRules.ToHandTypeRank(HandType.StraightFlush)) +
+            FromTopCardRank(StandardDeck.ToRankIndex(CardRank.Ace)) + 1;
+
         public const int Nothing = 0;
         public const int CardBitsWidth = 4;
 
@@ -19,8 +29,43 @@
         private const int FourthCardRankShift = 4;
         private const int FifthCardRankShift = 0;
 
-        //public static readonly int NothingLow = FromHandTypeRank(HandTypeStandard.StraightFlush) +
-        //    FromTopCard(DeckStandard.ToRankIndex(CardRank.Ace)) + 1;
+        public static readonly HandValue Empty = new HandValue(0, 0);
+
+        public HandValue(int highValue, int lowValue)
+        {
+            HighValue = highValue;
+            LowValue = lowValue;
+        }
+
+        public static bool operator ==(HandValue left, HandValue right)
+            => left.HighValue == right.HighValue && left.LowValue == right.LowValue;
+
+        public static bool operator !=(HandValue left, HandValue right) => !(left == right);
+
+        public int HighValue { get; set; }
+
+        public int LowValue { get; set; }
+
+        public override bool Equals(object obj) => obj is HandValue && Equals((HandValue) obj);
+
+        public bool Equals(HandValue other) => this == other;
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (HighValue.GetHashCode()*397) ^ LowValue.GetHashCode();
+            }
+        }
+
+        public override string ToString() => ToString(null, CultureInfo.InvariantCulture);
+
+        public string ToString(string format, IFormatProvider formatProvider)
+            =>
+                string.Format(CultureInfo.CurrentCulture,
+                    "{0},{1}",
+                    HighValue.ToString(format, formatProvider),
+                    LowValue.ToString(format, formatProvider));
 
         public static int FromHandTypeRank(int handTypeRank) => handTypeRank << HandTypeRankShift;
 
