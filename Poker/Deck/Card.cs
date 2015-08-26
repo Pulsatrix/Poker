@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Globalization;
 
 namespace Poker.Deck
@@ -35,10 +34,8 @@ namespace Poker.Deck
             }
         }
 
-        [DebuggerStepThrough]
         public override string ToString() => ToString(null, CultureInfo.InvariantCulture);
 
-        [DebuggerStepThrough]
         public string ToString(string format, IFormatProvider formatProvider)
             => string.Format(CultureInfo.CurrentCulture, "{0},{1}", _cardRank.ToString(), _cardSuit.ToString());
     }

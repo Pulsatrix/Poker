@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Poker.Deck
+﻿namespace Poker.Deck
 {
     public partial class StandardDeck : DeckBase
     {
@@ -11,14 +9,12 @@ namespace Poker.Deck
         private const string RankSymbolSet = "23456789TJQKA";
         private const string SuitSymbolSet = "HDCS";
 
-        [DebuggerStepThrough]
         public StandardDeck() : base(CardCount, RankCount, SuitCount, RankSymbolSet, SuitSymbolSet)
         {
         }
 
         public override CardRank FirstRank => CardRank.Two;
 
-        [DebuggerStepThrough]
         public override int ToRankIndex(CardRank cardRank)
         {
             int index;
@@ -75,7 +71,6 @@ namespace Poker.Deck
             return index;
         }
 
-        [DebuggerStepThrough]
         public override CardRank ToRank(int rankIndex)
         {
             CardRank cardRank;
@@ -129,7 +124,6 @@ namespace Poker.Deck
             return cardRank;
         }
 
-        [DebuggerStepThrough]
         public override int ToSuitIndex(CardSuit cardSuit)
         {
             int index;
@@ -159,7 +153,6 @@ namespace Poker.Deck
             return index;
         }
 
-        [DebuggerStepThrough]
         public override CardSuit ToSuit(int suitIndex)
         {
             CardSuit cardSuit;
@@ -186,7 +179,6 @@ namespace Poker.Deck
             return cardSuit;
         }
 
-        [DebuggerStepThrough]
         public override int ToCardIndex(CardRank cardRank, CardSuit cardSuit)
         {
             int cardIndex;
@@ -199,7 +191,6 @@ namespace Poker.Deck
             return cardIndex;
         }
 
-        [DebuggerStepThrough]
         public override CardMask ToCardMask(int cardIndex) => CardMaskTable[cardIndex];
     }
 }

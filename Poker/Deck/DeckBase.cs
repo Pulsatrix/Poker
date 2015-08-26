@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
@@ -11,7 +10,6 @@ namespace Poker.Deck
         private string _rankSymbols;
         private string _suitSymbols;
 
-        [DebuggerStepThrough]
         protected DeckBase(int noOfCards, int noOfRanks, int noOfSuits, string rankSymbols, string suitSymbols)
         {
             NoOfCards = noOfCards;
@@ -41,7 +39,7 @@ namespace Poker.Deck
 
                 if (value.Length != NoOfRanks)
                 {
-                    throw new ArgumentException(null, nameof(value));
+                    throw new ArgumentException(nameof(RankSymbols), nameof(value));
                 }
 
                 _rankSymbols = value;
@@ -60,7 +58,7 @@ namespace Poker.Deck
 
                 if (value.Length != NoOfSuits)
                 {
-                    throw new ArgumentException(null, nameof(value));
+                    throw new ArgumentException(nameof(SuitSymbols), nameof(value));
                 }
 
                 _suitSymbols = value;
@@ -139,8 +137,7 @@ namespace Poker.Deck
                         {
                             if (raiseException)
                             {
-                                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "{0}", symbol),
-                                    nameof(setOfCardValues));
+                                throw new ArgumentException(symbol.ToString(), nameof(setOfCardValues));
                             }
 
                             return false;
@@ -155,8 +152,7 @@ namespace Poker.Deck
                         {
                             if (raiseException)
                             {
-                                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "{0}", symbol),
-                                    nameof(setOfCardValues));
+                                throw new ArgumentException(symbol.ToString(), nameof(setOfCardValues));
                             }
 
                             return false;
@@ -171,9 +167,9 @@ namespace Poker.Deck
                             state));
                 }
 
-                var card = new Card(cardRank, cardSuit);
                 if (cards != null)
                 {
+                    var card = new Card(cardRank, cardSuit);
                     if (!cards.Contains(card))
                     {
                         cards.Add(card);

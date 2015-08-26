@@ -23,17 +23,21 @@ namespace Poker.Enumeration
         private bool _disposed;
         private bool _isDeadEnd;
 
-        public RandomEnumerator(int noOfCardsInDeck,
+        public RandomEnumerator(IDeck deck,
             int cardsToEnumerate,
-            CardMask deadMask,
-            Func<int, CardMask> toCardMask)
+            CardMask deadMask)
         {
-            _noOfCardsInDeck = noOfCardsInDeck;
+            if (deck == null)
+            {
+                throw new ArgumentNullException(nameof(deck));
+            }
+
+            _noOfCardsInDeck = deck.NoOfCards;
             _cardsToEnumerate = cardsToEnumerate < MinCardsToEnumerate || cardsToEnumerate > MaxCardsToEnumerate
                 ? DefaultCardsToEnumerate
                 : cardsToEnumerate;
             _deadMask = deadMask;
-            _toCardMask = toCardMask;
+            _toCardMask = deck.ToCardMask;
             _totalTrials = DefaultRandomTrials;
 
             Reset();

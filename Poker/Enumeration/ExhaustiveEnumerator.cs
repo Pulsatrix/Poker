@@ -25,17 +25,21 @@ namespace Poker.Enumeration
         private int _currentLevel;
         private int[] _index;
 
-        public ExhaustiveEnumerator(int noOfCardsInDeck,
+        public ExhaustiveEnumerator(IDeck deck,
             int cardsToEnumerate,
-            CardMask deadMask,
-            Func<int, CardMask> toCardMask)
+            CardMask deadMask)
         {
-            _noOfCardsInDeck = noOfCardsInDeck;
+            if (deck == null)
+            {
+                throw new ArgumentNullException(nameof(deck));
+            }
+
+            _noOfCardsInDeck = deck.NoOfCards;
             _cardsToEnumerate = cardsToEnumerate < MinCardsToEnumerate || cardsToEnumerate > MaxCardsToEnumerate
                 ? DefaultCardsToEnumerate
                 : cardsToEnumerate;
             _deadMask = deadMask;
-            _toCardMask = toCardMask;
+            _toCardMask = deck.ToCardMask;
 
             Reset();
         }
