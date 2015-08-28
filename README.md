@@ -1,5 +1,5 @@
 # Poker
-Poker hand evaluator and enumerator
+Poker hand evaluator, enumerator and equity calculator
 
 ## <a name='toc'>Table of Contents</a>
   1. [At glance](#at-glance)
