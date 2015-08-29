@@ -57,11 +57,12 @@
     <Compile Include="Deck\CardSuit.cs" />
     <Compile Include="Deck\DeckBase.cs" />
     <Compile Include="Deck\IDeck.cs" />
+    <Compile Include="Enumeration\EnumerationType.cs" />
     <Compile Include="Enumeration\RandomEnumerator.cs" />
     <Compile Include="Enumeration\ExhaustiveEnumerator.cs" />
-    <Compile Include="Equity\EquityCalculator.cs" />
-    <Compile Include="Equity\HoldemEquitySettings.cs" />
-    <Compile Include="Equity\IEquitySettings.cs" />
+    <Compile Include="Equity\EquityManager.cs" />
+    <Compile Include="Equity\HoldemCalculator.cs" />
+    <Compile Include="Equity\ICalculator.cs" />
     <Compile Include="Evaluation\HandType.cs" />
     <Compile Include="Evaluation\IRules.cs" />
     <Compile Include="Evaluation\StandardEvaluator.BitsTable.cs" />

@@ -11,23 +11,22 @@ namespace Poker.Enumeration
     public sealed class ExhaustiveEnumerator : IEnumerator<CardMask>
     {
         private const int DefaultCardsToEnumerate = 2;
-        private const int MinCardsToEnumerate = 1;
+        private const int MinCardsToEnumerate = 0;
         private const int MaxCardsToEnumerate = 9;
-
-        private CardMask[] _cardMask;
 
         private readonly int _noOfCardsInDeck;
         private readonly int _cardsToEnumerate;
-        private readonly CardMask _deadMask;
+        private readonly CardMask _deadCardMask;
         private readonly Func<int, CardMask> _toCardMask;
         private bool _disposed;
         private bool _isDeadEnd;
         private int _currentLevel;
         private int[] _index;
+        private CardMask[] _cardMask;
 
         public ExhaustiveEnumerator(IDeck deck,
             int cardsToEnumerate,
-            CardMask deadMask)
+            CardMask deadCardMask)
         {
             if (deck == null)
             {
@@ -38,7 +37,7 @@ namespace Poker.Enumeration
             _cardsToEnumerate = cardsToEnumerate < MinCardsToEnumerate || cardsToEnumerate > MaxCardsToEnumerate
                 ? DefaultCardsToEnumerate
                 : cardsToEnumerate;
-            _deadMask = deadMask;
+            _deadCardMask = deadCardMask;
             _toCardMask = deck.ToCardMask;
 
             Reset();
@@ -105,7 +104,7 @@ namespace Poker.Enumeration
                 --_index[_currentLevel];
                 var tempCardMask = _toCardMask(_index[_currentLevel]);
 
-                if (CardMask.IsAnySameCardSet(_deadMask, tempCardMask))
+                if (CardMask.IsAnySameCardSet(_deadCardMask, tempCardMask))
                 {
                     continue;
                 }

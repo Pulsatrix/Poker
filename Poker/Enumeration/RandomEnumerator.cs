@@ -9,23 +9,23 @@ namespace Poker.Enumeration
     {
         private const long DefaultRandomTrials = 1L;
         private const int DefaultCardsToEnumerate = 2;
-        private const int MinCardsToEnumerate = 1;
+        private const int MinCardsToEnumerate = 0;
         private const int MaxCardsToEnumerate = 9;
-        private readonly int _cardsToEnumerate;
-        private readonly CardMask _deadMask;
 
-        private readonly int _noOfCardsInDeck;
 
         private readonly Random _random = new Random();
+        private readonly int _noOfCardsInDeck;
+        private readonly int _cardsToEnumerate;
+        private readonly CardMask _deadCardMask;
         private readonly Func<int, CardMask> _toCardMask;
-        private readonly long _totalTrials;
-        private long _currentTrial;
         private bool _disposed;
         private bool _isDeadEnd;
+        private readonly long _totalTrials;
+        private long _currentTrial;
 
         public RandomEnumerator(IDeck deck,
             int cardsToEnumerate,
-            CardMask deadMask)
+            CardMask deadCardMask)
         {
             if (deck == null)
             {
@@ -36,7 +36,7 @@ namespace Poker.Enumeration
             _cardsToEnumerate = cardsToEnumerate < MinCardsToEnumerate || cardsToEnumerate > MaxCardsToEnumerate
                 ? DefaultCardsToEnumerate
                 : cardsToEnumerate;
-            _deadMask = deadMask;
+            _deadCardMask = deadCardMask;
             _toCardMask = deck.ToCardMask;
             _totalTrials = DefaultRandomTrials;
 
@@ -90,7 +90,7 @@ namespace Poker.Enumeration
             }
 
             Current = CardMask.Empty;
-            var currentDeadMask = _deadMask;
+            var currentDeadMask = _deadCardMask;
             for (var i = 0; i != _cardsToEnumerate; ++i)
             {
                 CardMask tempCardMask;
