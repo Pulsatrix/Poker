@@ -53,16 +53,20 @@
   <ItemGroup>
     <Compile Include="Deck\Card.cs" />
     <Compile Include="Deck\CardMask.cs" />
+    <Compile Include="Deck\PocketsDistribution.cs" />
     <Compile Include="Deck\CardRank.cs" />
     <Compile Include="Deck\CardSuit.cs" />
     <Compile Include="Deck\DeckBase.cs" />
     <Compile Include="Deck\IDeck.cs" />
     <Compile Include="Enumeration\EnumerationType.cs" />
-    <Compile Include="Enumeration\RandomEnumerator.cs" />
-    <Compile Include="Enumeration\ExhaustiveEnumerator.cs" />
+    <Compile Include="Enumeration\ExhaustivePocketsDistributionsEnumerator.cs" />
+    <Compile Include="Enumeration\RandomDeckEnumerator.cs" />
+    <Compile Include="Enumeration\ExhaustiveDeckEnumerator.cs" />
+    <Compile Include="Enumeration\RandomPocketsDistributionsEnumerator.cs" />
     <Compile Include="Equity\EquityManager.cs" />
     <Compile Include="Equity\HoldemCalculator.cs" />
     <Compile Include="Equity\ICalculator.cs" />
+    <Compile Include="Equity\EvaluationResult.cs" />
     <Compile Include="Evaluation\HandType.cs" />
     <Compile Include="Evaluation\IRules.cs" />
     <Compile Include="Evaluation\StandardEvaluator.BitsTable.cs" />

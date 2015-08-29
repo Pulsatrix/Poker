@@ -1,44 +1,41 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Poker.Deck;
 
 namespace Poker.Enumeration
 {
-    /// <summary>
-    ///     Exhaustively enumerates all possible card outcomes.
-    /// </summary>
-    public sealed class ExhaustiveEnumerator : IEnumerator<CardMask>
+    public sealed class ExhaustivePocketsDistributionsEnumerator : IEnumerator<IEnumerable<CardMask>>
     {
-        private const int DefaultCardsToEnumerate = 2;
-        private const int MinCardsToEnumerate = 0;
-        private const int MaxCardsToEnumerate = 9;
-
-        private readonly int _noOfCardsInDeck;
-        private readonly int _cardsToEnumerate;
+        private readonly IList<CardMask> _current;
+        private readonly CardMask[] _currentDeadMask;
         private readonly CardMask _deadCardMask;
-        private readonly Func<int, CardMask> _toCardMask;
+        private readonly int[] _handsCount;
+        private readonly IEnumerator<CardMask>[] _index;
+        private readonly int _noOfPlayers;
+        private readonly IList<PocketsDistribution> _pocketsDistributions;
         private bool _disposed;
         private bool _isDeadEnd;
-        private int _currentLevel;
-        private int[] _index;
-        private CardMask[] _cardMask;
 
-        public ExhaustiveEnumerator(IDeck deck,
-            int cardsToEnumerate,
+        private int _playerIndex;
+
+        public ExhaustivePocketsDistributionsEnumerator(IList<PocketsDistribution> pocketsDistributions,
             CardMask deadCardMask)
         {
-            if (deck == null)
+            if (pocketsDistributions == null)
             {
-                throw new ArgumentNullException(nameof(deck));
+                throw new ArgumentNullException(nameof(pocketsDistributions));
             }
 
-            _noOfCardsInDeck = deck.NoOfCards;
-            _cardsToEnumerate = cardsToEnumerate < MinCardsToEnumerate || cardsToEnumerate > MaxCardsToEnumerate
-                ? DefaultCardsToEnumerate
-                : cardsToEnumerate;
+            _pocketsDistributions = pocketsDistributions;
+            _noOfPlayers = _pocketsDistributions.Count;
             _deadCardMask = deadCardMask;
-            _toCardMask = deck.ToCardMask;
+
+            _current = new CardMask[_noOfPlayers];
+            _handsCount = new int[_noOfPlayers];
+            _index = new IEnumerator<CardMask>[_noOfPlayers];
+            _currentDeadMask = new CardMask[_noOfPlayers];
 
             Reset();
         }
@@ -49,7 +46,7 @@ namespace Poker.Enumeration
         /// <value>
         ///     The element in the collection at the current position of the enumerator.
         /// </value>
-        public CardMask Current { get; private set; }
+        public IEnumerable<CardMask> Current => _current;
 
         /// <summary>
         ///     Gets the current element in the collection.
@@ -83,48 +80,42 @@ namespace Poker.Enumeration
                 return false;
             }
 
-            var isEnd = false;
+            var foundEnd = false;
             do
             {
-                if (_index[_currentLevel] <= 0)
+                if (!_index[_playerIndex].MoveNext())
                 {
-                    if (_currentLevel == 0)
+                    _index[_playerIndex].Reset();
+
+                    if (_playerIndex == 0)
                     {
                         _isDeadEnd = true;
                         continue;
                     }
 
-                    --_currentLevel;
-                    if (_index[_currentLevel] <= 0)
-                    {
-                        continue;
-                    }
+                    --_playerIndex;
+                    continue;
                 }
 
-                --_index[_currentLevel];
-                var tempCardMask = _toCardMask(_index[_currentLevel]);
+                var tempCardMask = _index[_playerIndex].Current;
 
-                if (CardMask.IsAnySameCardSet(_deadCardMask, tempCardMask))
+                if (
+                    CardMask.IsAnySameCardSet(_playerIndex == 0 ? _deadCardMask : _currentDeadMask[_playerIndex - 1],
+                        tempCardMask) && _handsCount[_playerIndex] != 1)
                 {
                     continue;
                 }
 
-                _cardMask[_currentLevel] = _currentLevel == 0
-                    ? tempCardMask
-                    : _cardMask[_currentLevel - 1] | tempCardMask;
+                _currentDeadMask[_playerIndex] = tempCardMask |
+                    (_playerIndex == 0 ? _deadCardMask : _currentDeadMask[_playerIndex - 1]);
 
-                ++_currentLevel;
-                isEnd = _currentLevel == _cardsToEnumerate;
+                _current[_playerIndex] = tempCardMask;
 
-                if (!isEnd)
-                {
-                    _index[_currentLevel] = _index[_currentLevel - 1];
-                }
-            } while (!isEnd && !_isDeadEnd);
+                ++_playerIndex;
+                foundEnd = _playerIndex == _noOfPlayers;
+            } while (!foundEnd && !_isDeadEnd);
 
-            --_currentLevel;
-
-            Current = _isDeadEnd ? CardMask.Empty : _cardMask[_currentLevel];
+            --_playerIndex;
 
             return !_isDeadEnd;
         }
@@ -135,15 +126,18 @@ namespace Poker.Enumeration
         /// </summary>
         public void Reset()
         {
-            Current = CardMask.Empty;
             _isDeadEnd = false;
-            _currentLevel = 0;
-            _index = new int[_cardsToEnumerate];
-            _cardMask = new CardMask[_cardsToEnumerate];
-            _index[0] = _noOfCardsInDeck;
+            _playerIndex = 0;
+
+            for (var i = 0; i != _noOfPlayers; ++i)
+            {
+                _current[i] = CardMask.Empty;
+                _handsCount[i] = _pocketsDistributions[i].PocketsCardMasks.Count();
+                _index[i] = _pocketsDistributions[i].PocketsCardMasks.GetEnumerator();
+            }
         }
 
-        ~ExhaustiveEnumerator()
+        ~ExhaustivePocketsDistributionsEnumerator()
         {
             Dispose(false);
         }
@@ -165,8 +159,6 @@ namespace Poker.Enumeration
             if (disposing)
             {
                 // Dispose managed resources.
-                _index = null;
-                _cardMask = null;
             }
 
             // Dispose un-managed resources.

@@ -12,7 +12,7 @@ namespace Poker.Evaluation
         public static readonly int NothingLow = FromHandTypeRank(StandardRules.ToHandTypeRank(HandType.StraightFlush)) +
             FromTopCardRank(StandardDeck.ToRankIndex(CardRank.Ace)) + 1;
 
-        public const int Nothing = 0;
+        public const int NothingHigh = 0;
         public const int CardBitsWidth = 4;
 
         public const int HandTypeRankCardMask = 0x0F000000;
@@ -29,7 +29,7 @@ namespace Poker.Evaluation
         private const int FourthCardRankShift = 4;
         private const int FifthCardRankShift = 0;
 
-        public static readonly HandValue Empty = new HandValue(0, 0);
+        public static readonly HandValue Nothing = new HandValue(NothingHigh, NothingLow);
 
         public HandValue(int highValue, int lowValue)
         {

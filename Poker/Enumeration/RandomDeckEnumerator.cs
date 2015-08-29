@@ -5,27 +5,25 @@ using Poker.Deck;
 
 namespace Poker.Enumeration
 {
-    public sealed class RandomEnumerator : IEnumerator<CardMask>
+    public sealed class RandomDeckEnumerator : IEnumerator<CardMask>
     {
         private const long DefaultRandomTrials = 1L;
         private const int DefaultCardsToEnumerate = 2;
         private const int MinCardsToEnumerate = 0;
         private const int MaxCardsToEnumerate = 9;
 
-
-        private readonly Random _random = new Random();
-        private readonly int _noOfCardsInDeck;
         private readonly int _cardsToEnumerate;
+        private readonly int _noOfCardsInDeck;
+        private readonly long _totalTrials;
         private readonly CardMask _deadCardMask;
         private readonly Func<int, CardMask> _toCardMask;
+        private readonly Random _random = new Random();
+
+        private long _currentTrial;
         private bool _disposed;
         private bool _isDeadEnd;
-        private readonly long _totalTrials;
-        private long _currentTrial;
 
-        public RandomEnumerator(IDeck deck,
-            int cardsToEnumerate,
-            CardMask deadCardMask)
+        public RandomDeckEnumerator(IDeck deck, int cardsToEnumerate, CardMask deadCardMask)
         {
             if (deck == null)
             {
@@ -78,7 +76,7 @@ namespace Poker.Enumeration
         /// </returns>
         public bool MoveNext()
         {
-            if (_isDeadEnd)
+            if (_isDeadEnd || _cardsToEnumerate == 0)
             {
                 return false;
             }
@@ -118,7 +116,7 @@ namespace Poker.Enumeration
             _currentTrial = 0;
         }
 
-        ~RandomEnumerator()
+        ~RandomDeckEnumerator()
         {
             Dispose(false);
         }

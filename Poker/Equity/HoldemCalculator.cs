@@ -20,19 +20,18 @@ namespace Poker.Equity
         {
             var noOfBoardCards = boardCardMask.NoOfCardsSet();
             var cardsToEnumerate = MaxNoOfBoardCards - noOfBoardCards;
-            var enumerator = EnumerationType == EnumerationType.Exhaustive
-                ? (IEnumerator<CardMask>)new ExhaustiveEnumerator(Deck, cardsToEnumerate, deadCardMask)
-                : new RandomEnumerator(Deck, cardsToEnumerate, deadCardMask);
-            return enumerator;
+            var deckEnumerator = EnumerationType == EnumerationType.Exhaustive
+                ? (IEnumerator<CardMask>)new ExhaustiveDeckEnumerator(Deck, cardsToEnumerate, deadCardMask)
+                : new RandomDeckEnumerator(Deck, cardsToEnumerate, deadCardMask);
+            return deckEnumerator;
         }
 
         public HandValue Evaluate(CardMask boardCardMask, CardMask enumeratedCardMask, CardMask pocketsCardMask)
         {
             var finalboardCardMask = boardCardMask | enumeratedCardMask;
-            var finalHandMask = finalboardCardMask | pocketsCardMask;
-            var handValue = HandValue.Empty;
-            handValue.HighValue = StandardEvaluator.Evaluate(finalHandMask, NoOfCardsToEvaluate);
-            handValue.LowValue = HandValue.NothingLow;
+            var finalHandCardMask = finalboardCardMask | pocketsCardMask;
+            var handValue = HandValue.Nothing;
+            handValue.HighValue = StandardEvaluator.Evaluate(finalHandCardMask, NoOfCardsToEvaluate);
             return handValue;
         }
     }

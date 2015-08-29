@@ -8,7 +8,7 @@ namespace Poker.Evaluation
 
         public int Evaluate(CardMask cardMask, int noOfCardsToEvaluate)
         {
-            var handValue = HandValue.Nothing;
+            var handValue = HandValue.NothingHigh;
 
             var ss = cardMask.Spades();
             var sc = cardMask.Clubs();
@@ -84,7 +84,7 @@ namespace Poker.Evaluation
                 // Another win - if there can't be a FH/Quads (duplicateCount < 3), which is true
                 // most of the time when there is a made hand, then if we've found a five card hand,
                 // just return. This skips the whole process of computing two_mask/three_mask/etc.
-                if (handValue != HandValue.Nothing && duplicateCount < 3)
+                if (handValue != HandValue.NothingHigh && duplicateCount < 3)
                 {
                     return handValue;
                 }
@@ -122,7 +122,7 @@ namespace Poker.Evaluation
                 // Either two pair or trips.
                 case 2:
                     twoMask = ranks ^ (sc ^ sd ^ sh ^ ss);
-                    if (twoMask != HandValue.Nothing)
+                    if (twoMask != HandValue.NothingHigh)
                     {
                         handValue = HandValue.FromHandTypeRank(StandardRules.ToHandTypeRank(HandType.TwoPair)) +
                             (TopFiveCardsTable[twoMask] & (HandValue.TopCardRankMask | HandValue.SecondCardRankMask));
@@ -150,7 +150,7 @@ namespace Poker.Evaluation
                 default:
                     var fourMask = sh & sd & sc & ss;
                     int topCardRank;
-                    if (fourMask != HandValue.Nothing)
+                    if (fourMask != HandValue.NothingHigh)
                     {
                         topCardRank = TopCardTable[fourMask];
                         handValue = HandValue.FromHandTypeRank(StandardRules.ToHandTypeRank(HandType.Quads)) +
@@ -180,7 +180,7 @@ namespace Poker.Evaluation
                     }
 
                     // flush and straight.
-                    if (handValue != HandValue.Nothing)
+                    if (handValue != HandValue.NothingHigh)
                     {
                         return handValue;
                     }
