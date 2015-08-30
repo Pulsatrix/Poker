@@ -7,16 +7,11 @@ namespace Poker.Deck
 {
     public abstract class DeckBase : IDeck
     {
-        private string _rankSymbols;
-        private string _suitSymbols;
-
-        protected DeckBase(int noOfCards, int noOfRanks, int noOfSuits, string rankSymbols, string suitSymbols)
+        protected DeckBase(int noOfCards, int noOfRanks, int noOfSuits)
         {
             NoOfCards = noOfCards;
             NoOfRanks = noOfRanks;
             NoOfSuits = noOfSuits;
-            RankSymbols = rankSymbols;
-            SuitSymbols = suitSymbols;
         }
 
         public int NoOfCards { get; }
@@ -27,42 +22,20 @@ namespace Poker.Deck
 
         public abstract CardRank FirstRank { get; }
 
-        public string RankSymbols
+        public IList<string> RankNames { get; } = new List<string>();
+
+        public IList<string> AbbreviatedRankNames { get; } = new List<string>();
+
+        public IList<string> SuitNames { get; } = new List<string>();
+
+        public IList<string> AbbreviatedSuitNames { get; } = new List<string>();
+
+        public IList<string> GenitiveSuitNames { get; } = new List<string>();
+
+        public int ToRankIndex(int cardIndex)
         {
-            get { return _rankSymbols; }
-            set
-            {
-                if (value == null)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-
-                if (value.Length != NoOfRanks)
-                {
-                    throw new ArgumentException(nameof(RankSymbols), nameof(value));
-                }
-
-                _rankSymbols = value;
-            }
-        }
-
-        public string SuitSymbols
-        {
-            get { return _suitSymbols; }
-            set
-            {
-                if (value == null)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-
-                if (value.Length != NoOfSuits)
-                {
-                    throw new ArgumentException(nameof(SuitSymbols), nameof(value));
-                }
-
-                _suitSymbols = value;
-            }
+            var rankIndex = ToRankIndex(FirstRank) + cardIndex%NoOfRanks;
+            return rankIndex;
         }
 
         public int ToSuitIndex(int cardIndex)
@@ -71,21 +44,17 @@ namespace Poker.Deck
             return suitIndex;
         }
 
-        public abstract int ToSuitIndex(CardSuit cardSuit);
-
-        public abstract CardSuit ToSuit(int suitIndex);
-
-        public int ToRankIndex(int cardIndex)
-        {
-            var rankIndex = ToRankIndex(FirstRank) + cardIndex%NoOfRanks;
-            return rankIndex;
-        }
-
         public abstract int ToRankIndex(CardRank cardRank);
 
         public abstract CardRank ToRank(int rankIndex);
 
+        public abstract int ToSuitIndex(CardSuit cardSuit);
+
+        public abstract CardSuit ToSuit(int suitIndex);
+
         public abstract int ToCardIndex(CardRank cardRank, CardSuit cardSuit);
+
+        public abstract IEnumerable<int> ToCardIndexes(CardMask cardMask);
 
         public abstract CardMask ToCardMask(int cardIndex);
 
@@ -118,7 +87,7 @@ namespace Poker.Deck
                 return false;
             }
 
-            var compareInfo = CultureInfo.CurrentCulture.CompareInfo;
+            //var compareInfo = CultureInfo.CurrentCulture.CompareInfo;
             const int stateRank = 0x0001;
             const int stateSuit = 0x0002;
             var state = stateRank;
@@ -131,7 +100,8 @@ namespace Poker.Deck
                 switch (state)
                 {
                     case stateRank:
-                        var rankIndex = compareInfo.IndexOf(RankSymbols, symbol, CompareOptions.IgnoreCase);
+                        //var rankIndex = compareInfo.IndexOf(AbbreviatedRankNames, symbol, CompareOptions.IgnoreCase);
+                        var rankIndex = AbbreviatedRankNames.IndexOf(symbol.ToString());
                         cardRank = ToRank(rankIndex);
                         if (cardRank == CardRank.Undefined)
                         {
@@ -146,7 +116,8 @@ namespace Poker.Deck
                         state = stateSuit;
                         continue;
                     case stateSuit:
-                        var suitIndex = compareInfo.IndexOf(SuitSymbols, symbol, CompareOptions.IgnoreCase);
+                        //var suitIndex = compareInfo.IndexOf(AbbreviatedSuitNames, symbol, CompareOptions.IgnoreCase);
+                        var suitIndex = AbbreviatedSuitNames.IndexOf(symbol.ToString());
                         cardSuit = ToSuit(suitIndex);
                         if (cardSuit == CardSuit.Undefined)
                         {

@@ -1,4 +1,6 @@
-﻿namespace Poker.Deck
+﻿using System.Collections.Generic;
+
+namespace Poker.Deck
 {
     public interface IDeck
     {
@@ -10,9 +12,15 @@
 
         CardRank FirstRank { get; }
 
-        string SuitSymbols { get; set; }
+        IList<string> RankNames { get; }
 
-        string RankSymbols { get; set; }
+        IList<string> AbbreviatedRankNames { get; }
+
+        IList<string> SuitNames { get; }
+
+        IList<string> AbbreviatedSuitNames { get; }
+
+        IList<string> GenitiveSuitNames { get; }
 
         int ToRankIndex(int cardIndex);
 
@@ -27,6 +35,8 @@
         CardSuit ToSuit(int suitIndex);
 
         int ToCardIndex(CardRank cardRank, CardSuit cardSuit);
+
+        IEnumerable<int> ToCardIndexes(CardMask cardMask);
 
         CardMask ToCardMask(int cardIndex);
 

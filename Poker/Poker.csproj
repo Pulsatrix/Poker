@@ -52,6 +52,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Deck\Card.cs" />
+    <Compile Include="Deck\CardFormat.cs" />
+    <Compile Include="Deck\CardFormatInfo.cs" />
+    <Compile Include="Deck\CardFormatSettings.cs" />
     <Compile Include="Deck\CardMask.cs" />
     <Compile Include="Deck\PocketsDistribution.cs" />
     <Compile Include="Deck\CardRank.cs" />

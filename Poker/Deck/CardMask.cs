@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 
 namespace Poker.Deck
 {
@@ -92,9 +91,13 @@ namespace Poker.Deck
             return count;
         }
 
-        public override string ToString() => ToString(null, CultureInfo.InvariantCulture);
+        public override string ToString() => ToString(null, CardFormatInfo.CurrentInfo);
+
+        public string ToString(string format) => ToString(format, CardFormatInfo.CurrentInfo);
+
+        public string ToString(IFormatProvider provider) => ToString(null, provider);
 
         public string ToString(string format, IFormatProvider formatProvider)
-            => _cardMask.ToString(format, formatProvider);
+            => CardFormat.Format(this, format, CardFormatInfo.GetInstance(formatProvider));
     }
 }

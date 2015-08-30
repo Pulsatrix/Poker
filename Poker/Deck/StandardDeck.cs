@@ -1,18 +1,104 @@
-﻿namespace Poker.Deck
+﻿using System.Collections.Generic;
+
+namespace Poker.Deck
 {
     public partial class StandardDeck : DeckBase
     {
         private const int CardCount = 52;
-        private const int SuitCount = 4;
         private const int RankCount = 13;
+        private const int SuitCount = 4;
         internal const int NoOfRankMasks = 1 << RankCount;
-        private const string RankSymbolSet = "23456789TJQKA";
-        private const string SuitSymbolSet = "HDCS";
 
-        public StandardDeck() : base(CardCount, RankCount, SuitCount, RankSymbolSet, SuitSymbolSet)
+        private static readonly string[] RankNameArray = {
+            "Two",
+            "Three",
+            "Four",
+            "Five",
+            "Six",
+            "Seven",
+            "Eight",
+            "Nine",
+            "Ten",
+            "Jack",
+            "Queen",
+            "King",
+            "Ace"
+        };
+
+        private static readonly string[] AbbreviatedRankNameArray = {
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "T",
+            "J",
+            "Q",
+            "K",
+            "A"
+        };
+
+        private static readonly string[] SuitNameArray = {
+            "Hearts",
+            "Diamonds",
+            "Clubs",
+            "Spades",
+        };
+
+        private static readonly string[] AbbreviatedSuitNameArray = {
+            "h",
+            "d",
+            "c",
+            "s",
+        };
+
+        private static readonly string[] GenitiveSuitNameArray = {
+            "of Hearts",
+            "of Diamonds",
+            "of Clubs",
+            "of Spades",
+        };
+
+        private static volatile IDeck _defaultInstance;
+
+        public StandardDeck() : base(CardCount, RankCount, SuitCount)
         {
+            RankNames.Clear();
+            foreach (var s in RankNameArray)
+            {
+                RankNames.Add(s);
+            }
+
+            AbbreviatedRankNames.Clear();
+            foreach (var s in AbbreviatedRankNameArray)
+            {
+                AbbreviatedRankNames.Add(s);
+            }
+
+            SuitNames.Clear();
+            foreach (var s in SuitNameArray)
+            {
+                SuitNames.Add(s);
+            }
+
+            AbbreviatedSuitNames.Clear();
+            foreach (var s in AbbreviatedSuitNameArray)
+            {
+                AbbreviatedSuitNames.Add(s);
+            }
+
+            GenitiveSuitNames.Clear();
+            foreach (var s in GenitiveSuitNameArray)
+            {
+                GenitiveSuitNames.Add(s);
+            }
         }
 
+        public static IDeck DefaultInstance => _defaultInstance ?? (_defaultInstance = new StandardDeck());
+        
         public override CardRank FirstRank => CardRank.Two;
 
         public override int ToRankIndex(CardRank cardRank)
@@ -189,6 +275,37 @@
             }
 
             return cardIndex;
+        }
+
+        public override IEnumerable<int> ToCardIndexes(CardMask cardMask)
+        {
+            var cardIndexes = new int[cardMask.NoOfCardsSet()];
+            var index = 0;
+
+            var patternMask = (CardMask) 1L;
+
+            for (var i = 0; i != 64; ++i, patternMask <<= 1)
+            {
+                var tempMask = cardMask & patternMask;
+                if (tempMask == CardMask.Empty)
+                {
+                    continue;
+                }
+
+                for (var cardIndex = 0; cardIndex != CardMaskTable.Length; ++cardIndex)
+                {
+                    if (tempMask != CardMaskTable[cardIndex])
+                    {
+                        continue;
+                    }
+
+                    cardIndexes[index] = cardIndex;
+                    ++index;
+                    break;
+                }
+            }
+
+            return cardIndexes;
         }
 
         public override CardMask ToCardMask(int cardIndex) => CardMaskTable[cardIndex];
