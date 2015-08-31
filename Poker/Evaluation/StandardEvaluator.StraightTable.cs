@@ -3,7 +3,7 @@
     /// <summary>
     ///     Straight table definition for <see cref="StandardEvaluator" />.
     /// </summary>
-    public partial class StandardEvaluator
+    public sealed partial class StandardEvaluator
     {
         /// <summary>
         ///     Maps 13-bit rank masks to a value indicating if a straight is present, and if so,

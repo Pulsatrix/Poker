@@ -1,6 +1,6 @@
 namespace Poker.Evaluation
 {
-    public class StandardRules : IRules
+    public sealed class StandardRules : IRules
     {
         private const int HandTypeCount = 9;
 

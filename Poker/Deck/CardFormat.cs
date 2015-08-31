@@ -132,14 +132,16 @@ namespace Poker.Deck
                 : cardFormatInfo.GetSuitName(suitIndex,
                     (cardFormatInfo.FormatSettings & CardFormatSettings.UseGenitiveSuit) != CardFormatSettings.None));
 
-            if (num1 == 2)
+            if (num1 != 2)
             {
-                sb.Append(cardFormatInfo.CardNamePartsSeparator);
-                sb.Append(patternChar == 'R'
-                    ? cardFormatInfo.GetSuitName(suitIndex,
-                        (cardFormatInfo.FormatSettings & CardFormatSettings.UseGenitiveSuit) != CardFormatSettings.None)
-                    : cardFormatInfo.GetRankName(rankIndex));
+                return;
             }
+
+            sb.Append(cardFormatInfo.CardNamePartsSeparator);
+            sb.Append(patternChar == 'R'
+                ? cardFormatInfo.GetSuitName(suitIndex,
+                    (cardFormatInfo.FormatSettings & CardFormatSettings.UseGenitiveSuit) != CardFormatSettings.None)
+                : cardFormatInfo.GetRankName(rankIndex));
         }
 
         private static void FormatAbbreviatedName2(CardFormatInfo cardFormatInfo,
@@ -159,13 +161,15 @@ namespace Poker.Deck
                 ? cardFormatInfo.GetAbbreviatedRankName(rankIndex)
                 : cardFormatInfo.GetAbbreviatedSuitName(suitIndex));
 
-            if (num1 == 2)
+            if (num1 != 2)
             {
-                sb.Append(cardFormatInfo.CardAbbreviationPartsSeparator);
-                sb.Append(patternChar == 'r'
-                    ? cardFormatInfo.GetAbbreviatedSuitName(suitIndex)
-                    : cardFormatInfo.GetAbbreviatedRankName(rankIndex));
+                return;
             }
+
+            sb.Append(cardFormatInfo.CardAbbreviationPartsSeparator);
+            sb.Append(patternChar == 'r'
+                ? cardFormatInfo.GetAbbreviatedSuitName(suitIndex)
+                : cardFormatInfo.GetAbbreviatedRankName(rankIndex));
         }
 
         private static void FormatName(CardFormatInfo cardFormatInfo, int i, StringBuilder sb, int rankIndex, int suitIndex)

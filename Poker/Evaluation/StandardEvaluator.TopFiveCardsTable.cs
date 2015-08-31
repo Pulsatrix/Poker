@@ -3,7 +3,7 @@
     /// <summary>
     ///     Top five cards table definition for <see cref="StandardEvaluator" />.
     /// </summary>
-    public partial class StandardEvaluator
+    public sealed partial class StandardEvaluator
     {
         /// <summary>
         ///     Maps 13-bit rank masks to a HandValue structure with the xx_card fields set. The fields

@@ -3,7 +3,7 @@
     /// <summary>
     ///     Top card table definition for <see cref="StandardEvaluator" />.
     /// </summary>
-    public partial class StandardEvaluator
+    public sealed partial class StandardEvaluator
     {
         /// <summary>
         ///     Maps 13-bit rank masks to an integer corresponding to a card rank. The output value is

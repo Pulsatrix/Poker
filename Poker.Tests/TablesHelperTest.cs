@@ -5,7 +5,7 @@ using Poker.Evaluation;
 namespace Poker.Tests
 {
     [TestClass]
-    public class TablesHelperTest
+    public sealed class TablesHelperTest
     {
         [TestMethod]
         public void GeneratedStandardDeckCardMaskTableShouldMatchActualOne()

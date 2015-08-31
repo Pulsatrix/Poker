@@ -2,7 +2,7 @@
 
 namespace Poker.Evaluation
 {
-    public partial class StandardEvaluator : IEvaluator
+    public sealed partial class StandardEvaluator : IEvaluator
     {
         private static readonly IRules StandardRules = new StandardRules();
 

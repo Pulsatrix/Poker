@@ -8,6 +8,6 @@ namespace Poker.Deck
         None = 0,
         NotInitialized = 1,
         UseGenitiveSuit = 2,
-        UseSuitFirst = 4,
+        UseSuitFirst = 4
     }
 }

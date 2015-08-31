@@ -3,7 +3,7 @@
     /// <summary>
     ///     Bits table definition for <see cref="StandardEvaluator" />.
     /// </summary>
-    public partial class StandardEvaluator
+    public sealed partial class StandardEvaluator
     {
         /// <summary>
         ///     Maps 13-bit rank masks to the number of bits that are set in the mask.

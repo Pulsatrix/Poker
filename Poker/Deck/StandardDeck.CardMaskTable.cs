@@ -3,7 +3,7 @@
     /// <summary>
     ///     Card mask table definition for <see cref="StandardDeck" />.
     /// </summary>
-    public partial class StandardDeck
+    public sealed partial class StandardDeck
     {
         /// <summary>
         ///     Represents card index to card mask lookup table. The card mask has only one bit set,

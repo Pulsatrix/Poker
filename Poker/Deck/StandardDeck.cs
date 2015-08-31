@@ -2,7 +2,7 @@
 
 namespace Poker.Deck
 {
-    public partial class StandardDeck : DeckBase
+    public sealed partial class StandardDeck : DeckBase
     {
         private const int CardCount = 52;
         private const int RankCount = 13;
@@ -45,21 +45,21 @@ namespace Poker.Deck
             "Hearts",
             "Diamonds",
             "Clubs",
-            "Spades",
+            "Spades"
         };
 
         private static readonly string[] AbbreviatedSuitNameArray = {
             "h",
             "d",
             "c",
-            "s",
+            "s"
         };
 
         private static readonly string[] GenitiveSuitNameArray = {
             "of Hearts",
             "of Diamonds",
             "of Clubs",
-            "of Spades",
+            "of Spades"
         };
 
         private static volatile IDeck _defaultInstance;
@@ -98,7 +98,7 @@ namespace Poker.Deck
         }
 
         public static IDeck DefaultInstance => _defaultInstance ?? (_defaultInstance = new StandardDeck());
-        
+
         public override CardRank FirstRank => CardRank.Two;
 
         public override int ToRankIndex(CardRank cardRank)
