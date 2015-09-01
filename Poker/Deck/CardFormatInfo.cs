@@ -17,7 +17,6 @@ namespace Poker.Deck
         private IList<string> _abbreviatedRankNames;
         private IList<string> _abbreviatedSuitNames;
 
-        private IDeck _deck;
         private CardFormatSettings _formatSettings = CardFormatSettings.NotInitialized;
         private IList<string> _genitiveSuitNames;
         private IList<string> _rankNames;
@@ -37,12 +36,7 @@ namespace Poker.Deck
             Deck = deck;
         }
 
-        public IDeck Deck
-        {
-            get { return _deck; }
-
-            private set { _deck = value; }
-        }
+        public IDeck Deck { get; private set; }
 
         public static CardFormatInfo CurrentInfo => DefaultInstance;
 
@@ -50,13 +44,15 @@ namespace Poker.Deck
         {
             get
             {
-                if (_formatSettings != CardFormatSettings.NotInitialized)
+                if ((_formatSettings | CardFormatSettings.NotInitialized) != CardFormatSettings.NotInitialized)
                 {
                     return _formatSettings;
                 }
 
                 _formatSettings = CardFormatSettings.None;
-                _formatSettings = _formatSettings | GetFormatFlagGenitiveSuit(GetSuitNames(), GetGenitiveSuitNames());
+                _formatSettings = _formatSettings | (EqualStringArrays(GetSuitNames(), GetGenitiveSuitNames())
+                    ? CardFormatSettings.None
+                    : CardFormatSettings.UseGenitiveSuit);
                 return _formatSettings;
             }
 
@@ -100,9 +96,9 @@ namespace Poker.Deck
 
         public string CardAbbreviationPartsSeparator { get; set; } = DefaultCardAbbreviationPartsSeparator;
 
-        public object GetFormat(Type formatType) => formatType == typeof (CardFormatInfo) ? this : null;
-
         public static CardFormatInfo DefaultInstance => _defaultInstance ?? (_defaultInstance = new CardFormatInfo());
+
+        public object GetFormat(Type formatType) => formatType == typeof (CardFormatInfo) ? this : null;
 
         public static CardFormatInfo GetInstance(IFormatProvider formatProvider)
         {
@@ -126,7 +122,7 @@ namespace Poker.Deck
 
         public string GetRankName(int rankIndex)
         {
-            if (rankIndex < 0 || rankIndex >= _deck.NoOfRanks)
+            if (rankIndex < 0 || rankIndex >= Deck.NoOfRanks)
             {
                 throw new ArgumentOutOfRangeException(nameof(rankIndex));
             }
@@ -136,7 +132,7 @@ namespace Poker.Deck
 
         public string GetAbbreviatedRankName(int rankIndex)
         {
-            if (rankIndex < 0 || rankIndex >= _deck.NoOfRanks)
+            if (rankIndex < 0 || rankIndex >= Deck.NoOfRanks)
             {
                 throw new ArgumentOutOfRangeException(nameof(rankIndex));
             }
@@ -146,7 +142,7 @@ namespace Poker.Deck
 
         public string GetSuitName(int suitIndex, bool useGenitive)
         {
-            if (suitIndex < 0 || suitIndex >= _deck.NoOfSuits)
+            if (suitIndex < 0 || suitIndex >= Deck.NoOfSuits)
             {
                 throw new ArgumentOutOfRangeException(nameof(suitIndex));
             }
@@ -156,7 +152,7 @@ namespace Poker.Deck
 
         public string GetAbbreviatedSuitName(int suitIndex)
         {
-            if (suitIndex < 0 || suitIndex >= _deck.NoOfSuits)
+            if (suitIndex < 0 || suitIndex >= Deck.NoOfSuits)
             {
                 throw new ArgumentOutOfRangeException(nameof(suitIndex));
             }
@@ -164,24 +160,18 @@ namespace Poker.Deck
             return GetAbbreviatedSuitNames()[suitIndex];
         }
 
-        private IList<string> GetRankNames() => _rankNames ?? (_rankNames = _deck.RankNames);
+        private IList<string> GetRankNames() => _rankNames ?? (_rankNames = Deck.RankNames);
 
         private IList<string> GetAbbreviatedRankNames()
-            => _abbreviatedRankNames ?? (_abbreviatedRankNames = _deck.AbbreviatedRankNames);
+            => _abbreviatedRankNames ?? (_abbreviatedRankNames = Deck.AbbreviatedRankNames);
 
-        private IList<string> GetSuitNames() => _suitNames ?? (_suitNames = _deck.SuitNames);
+        private IList<string> GetSuitNames() => _suitNames ?? (_suitNames = Deck.SuitNames);
 
         private IList<string> GetAbbreviatedSuitNames()
-            => _abbreviatedSuitNames ?? (_abbreviatedSuitNames = _deck.AbbreviatedSuitNames);
+            => _abbreviatedSuitNames ?? (_abbreviatedSuitNames = Deck.AbbreviatedSuitNames);
 
         private IList<string> GetGenitiveSuitNames()
-            => _genitiveSuitNames ?? (_genitiveSuitNames = _deck.GenitiveSuitNames);
-
-        internal static CardFormatSettings GetFormatFlagGenitiveSuit(IList<string> suitNames, IList<string> genitveSuitNames)
-            =>
-                EqualStringArrays(suitNames, genitveSuitNames)
-                    ? CardFormatSettings.None
-                    : CardFormatSettings.UseGenitiveSuit;
+            => _genitiveSuitNames ?? (_genitiveSuitNames = Deck.GenitiveSuitNames);
 
         private static bool EqualStringArrays(IList<string> array1, IList<string> array2)
         {

@@ -58,41 +58,54 @@ namespace Poker.Deck
 
         public abstract CardMask ToCardMask(int cardIndex);
 
-        public CardMask Parse(string setOfCardValues)
+        public CardMask ParseCards(string value)
         {
             CardMask cardMask;
-            Parse(setOfCardValues, true, null, out cardMask);
+            Parse(value, true, null, out cardMask);
             return cardMask;
         }
 
-        public bool TryParse(string setOfCardValues, out CardMask cardMask)
+        public bool TryParseCards(string value, out CardMask cardMask)
         {
-            var result = Parse(setOfCardValues, true, null, out cardMask);
+            var result = Parse(value, true, null, out cardMask);
             return result;
         }
 
-        private bool Parse(string setOfCardValues, bool raiseException, ICollection<Card> cards, out CardMask cardMask)
+        public CardRank ParseCardRank(char value)
+        {
+            var rankIndex = AbbreviatedRankNames.IndexOf(value.ToString());
+            var cardRank = ToRank(rankIndex);
+            return cardRank;
+        }
+
+        public CardSuit ParseCardSuit(char value)
+        {
+            var suitIndex = AbbreviatedSuitNames.IndexOf(value.ToString());
+            var cardSuit = ToSuit(suitIndex);
+            return cardSuit;
+        }
+
+        private bool Parse(string value, bool raiseException, ICollection<Card> cards, out CardMask cardMask)
         {
             cards?.Clear();
 
             cardMask = CardMask.Empty;
 
-            if (setOfCardValues == null)
+            if (value == null)
             {
                 if (raiseException)
                 {
-                    throw new ArgumentNullException(nameof(setOfCardValues));
+                    throw new ArgumentNullException(nameof(value));
                 }
 
                 return false;
             }
 
-            //var compareInfo = CultureInfo.CurrentCulture.CompareInfo;
             const int stateRank = 0x0001;
             const int stateSuit = 0x0002;
             var state = stateRank;
 
-            foreach (var symbol in setOfCardValues.Where(c => !char.IsWhiteSpace(c)))
+            foreach (var symbol in value.Where(c => !char.IsWhiteSpace(c)))
             {
                 var cardRank = CardRank.Undefined;
                 CardSuit cardSuit;
@@ -100,14 +113,12 @@ namespace Poker.Deck
                 switch (state)
                 {
                     case stateRank:
-                        //var rankIndex = compareInfo.IndexOf(AbbreviatedRankNames, symbol, CompareOptions.IgnoreCase);
-                        var rankIndex = AbbreviatedRankNames.IndexOf(symbol.ToString());
-                        cardRank = ToRank(rankIndex);
+                        cardRank = ParseCardRank(symbol);
                         if (cardRank == CardRank.Undefined)
                         {
                             if (raiseException)
                             {
-                                throw new ArgumentException(symbol.ToString(), nameof(setOfCardValues));
+                                throw new ArgumentException(symbol.ToString(), nameof(value));
                             }
 
                             return false;
@@ -116,14 +127,12 @@ namespace Poker.Deck
                         state = stateSuit;
                         continue;
                     case stateSuit:
-                        //var suitIndex = compareInfo.IndexOf(AbbreviatedSuitNames, symbol, CompareOptions.IgnoreCase);
-                        var suitIndex = AbbreviatedSuitNames.IndexOf(symbol.ToString());
-                        cardSuit = ToSuit(suitIndex);
+                        cardSuit = ParseCardSuit(symbol);
                         if (cardSuit == CardSuit.Undefined)
                         {
                             if (raiseException)
                             {
-                                throw new ArgumentException(symbol.ToString(), nameof(setOfCardValues));
+                                throw new ArgumentException(symbol.ToString(), nameof(value));
                             }
 
                             return false;

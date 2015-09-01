@@ -40,8 +40,12 @@ namespace Poker.Deck
 
         CardMask ToCardMask(int cardIndex);
 
-        CardMask Parse(string setOfCardValues);
+        CardMask ParseCards(string value);
 
-        bool TryParse(string setOfCardValues, out CardMask cardMask);
+        bool TryParseCards(string value, out CardMask cardMask);
+
+        CardRank ParseCardRank(char value);
+
+        CardSuit ParseCardSuit(char value);
     }
 }

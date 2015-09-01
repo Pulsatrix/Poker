@@ -172,7 +172,11 @@ namespace Poker.Deck
                 : cardFormatInfo.GetAbbreviatedRankName(rankIndex));
         }
 
-        private static void FormatName(CardFormatInfo cardFormatInfo, int i, StringBuilder sb, int rankIndex, int suitIndex)
+        private static void FormatName(CardFormatInfo cardFormatInfo,
+            int i,
+            StringBuilder sb,
+            int rankIndex,
+            int suitIndex)
         {
             if (i != 0)
             {
