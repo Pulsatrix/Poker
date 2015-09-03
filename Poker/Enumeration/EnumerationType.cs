@@ -2,7 +2,7 @@
 {
     public enum EnumerationType
     {
-        //Automatic,
+        Undefined,
         Exhaustive,
         Random
     }

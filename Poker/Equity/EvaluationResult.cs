@@ -22,11 +22,6 @@ namespace Poker.Equity
 
         public float ExpectedValue { get; set; }
 
-        public float Probability { get; private set; }
-
-        internal void DoPostEvaluation(long trialCount)
-        {
-            Probability = (ExpectedValue / trialCount) * 100.0F;
-        }
+        public float Probability { get; set; }
     }
 }

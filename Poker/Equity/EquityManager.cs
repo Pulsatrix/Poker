@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -17,7 +18,52 @@ namespace Poker.Equity
         private const char DefaultConnectorOffSuit = 'o';
         private const string DefaultRandomSet = "XxXx";
 
-        public static void EnumerateAndEvaluate(ICalculator calculator,
+        public static IEnumerable<EvaluationResult> EnumerateAndEvaluateDistribution(ICalculator calculator,
+            string boardSet,
+            string deadSet,
+            IEnumerable<string> pocketsDistributionSets)
+        {
+            if (calculator == null)
+            {
+                throw new ArgumentNullException(nameof(calculator));
+            }
+
+            var deck = calculator.Deck;
+            var boardCardMask = deck.ParseCards(boardSet);
+            var deadCardMask = deck.ParseCards(deadSet);
+
+            var pocketsCardMasks = new Collection<PocketsDistribution>();
+            foreach (var pocketsCardMask in pocketsDistributionSets.Select(pockets => deck.ParseCards(pockets)))
+            {
+                pocketsCardMasks.Add(pocketsCardMask);
+            }
+
+            var evaluationResults = EnumerateAndEvaluateDistribution(calculator,
+                boardCardMask,
+                deadCardMask,
+                pocketsCardMasks);
+            return evaluationResults;
+        }
+
+        public static IEnumerable<EvaluationResult> EnumerateAndEvaluateDistribution(ICalculator calculator,
+            CardMask boardCardMask,
+            CardMask deadCardMask,
+            IEnumerable<PocketsDistribution> pocketsDistributions)
+        {
+            if (calculator == null)
+            {
+                throw new ArgumentNullException(nameof(calculator));
+            }
+
+            var pockets = pocketsDistributions.ToList();
+            var evaluationResults = InitEvaluationResults(pockets.Count);
+
+            //EnumerateAndEvaluate(calculator, boardCardMask, deadCardMask, pockets, evaluationResults);
+
+            return evaluationResults;
+        }
+
+        public static IEnumerable<EvaluationResult> EnumerateAndEvaluate(ICalculator calculator,
             string boardSet,
             string deadSet,
             IEnumerable<string> pocketsSet)
@@ -37,10 +83,11 @@ namespace Poker.Equity
                 pocketsCardMasks.Add(pocketsCardMask);
             }
 
-            EnumerateAndEvaluate(calculator, boardCardMask, deadCardMask, pocketsCardMasks);
+            var evaluationResults = EnumerateAndEvaluate(calculator, boardCardMask, deadCardMask, pocketsCardMasks);
+            return evaluationResults;
         }
 
-        public static void EnumerateAndEvaluate(ICalculator calculator,
+        public static IEnumerable<EvaluationResult> EnumerateAndEvaluate(ICalculator calculator,
             CardMask boardCardMask,
             CardMask deadCardMask,
             IEnumerable<CardMask> pocketsCardMasks)
@@ -51,9 +98,53 @@ namespace Poker.Equity
             }
 
             var pockets = pocketsCardMasks.ToList();
-            deadCardMask = CombineCardMasks(boardCardMask, deadCardMask, pockets);
+            var evaluationResults = InitEvaluationResults(pockets.Count);
 
-            var deckEnumerator = calculator.GetEnumerator(boardCardMask, deadCardMask);
+            EnumerateAndEvaluate(calculator, boardCardMask, deadCardMask, pockets, evaluationResults);
+
+            return evaluationResults;
+        }
+
+        private static void EnumerateAndEvaluate(ICalculator calculator,
+            CardMask boardCardMask,
+            CardMask deadCardMask,
+            List<CardMask> pockets,
+            IList<EvaluationResult> evaluationResults)
+        {
+            var trialCount = 0L;
+            var localState = InitLocalState(calculator, boardCardMask, deadCardMask, pockets.Count);
+            localState = EnumerateAndEvaluate(pockets, localState);
+            UpdateEvaluationResults(localState, evaluationResults, ref trialCount);
+            CalculateProbability(trialCount, evaluationResults);
+        }
+
+        private static LocalState InitLocalState(ICalculator calculator,
+            CardMask boardCardMask,
+            CardMask deadCardMask,
+            int playersCount)
+        {
+            var localState = new LocalState
+            {
+                Calculator = calculator,
+                BoardCardMask = boardCardMask,
+                DeadCardMask = deadCardMask,
+                PlayersCount = playersCount,
+                EvaluationResults = InitEvaluationResults(playersCount),
+                TrialCount = 0
+            };
+            return localState;
+        }
+
+        private static LocalState EnumerateAndEvaluate(List<CardMask> pockets, LocalState localState)
+        {
+            var calculator = localState.Calculator;
+            if (calculator.EnumerationType == EnumerationType.Undefined)
+            {
+                calculator.EnumerationType = EnumerationType.Exhaustive;
+            }
+
+            var deadCardMask = CombineCardMasks(localState.BoardCardMask, localState.DeadCardMask, pockets);
+            var deckEnumerator = calculator.GetEnumerator(localState.BoardCardMask, deadCardMask);
             var isAvailable = deckEnumerator.MoveNext();
 
             if (isAvailable)
@@ -61,40 +152,73 @@ namespace Poker.Equity
                 do
                 {
                     var enumeratedCardMask = deckEnumerator.Current;
-                    Evaluate(calculator, boardCardMask, enumeratedCardMask, pockets);
+                    Evaluate(calculator,
+                        localState.BoardCardMask,
+                        enumeratedCardMask,
+                        pockets,
+                        localState.EvaluationResults);
+                    ++localState.TrialCount;
                 } while (deckEnumerator.MoveNext());
             }
             else
             {
-                Evaluate(calculator, boardCardMask, CardMask.Empty, pockets);
+                Evaluate(calculator, localState.BoardCardMask, CardMask.Empty, pockets, localState.EvaluationResults);
+                ++localState.TrialCount;
+            }
+
+            return localState;
+        }
+
+        private static void UpdateEvaluationResults(LocalState localState,
+            IList<EvaluationResult> evaluationResults,
+            ref long trialCount)
+        {
+            var thisLock = new object();
+
+            lock (thisLock)
+            {
+                trialCount += localState.TrialCount;
+                for (var i = 0; i != localState.PlayersCount; ++i)
+                {
+                    evaluationResults[i].HighWinCount += localState.EvaluationResults[i].HighWinCount;
+                    evaluationResults[i].HighTieCount += localState.EvaluationResults[i].HighTieCount;
+                    evaluationResults[i].HighLoseCount += localState.EvaluationResults[i].HighLoseCount;
+                    evaluationResults[i].LowWinCount += localState.EvaluationResults[i].LowWinCount;
+                    evaluationResults[i].LowTieCount += localState.EvaluationResults[i].LowTieCount;
+                    evaluationResults[i].LowLoseCount += localState.EvaluationResults[i].LowLoseCount;
+                    evaluationResults[i].ScoopCount += localState.EvaluationResults[i].ScoopCount;
+                    evaluationResults[i].ExpectedValue += localState.EvaluationResults[i].ExpectedValue;
+                }
             }
         }
 
-        private static CardMask CombineCardMasks(CardMask boardCardMask,
-            CardMask deadCardMask,
-            IEnumerable<CardMask> pocketsCardMasks)
+        private static IList<EvaluationResult> InitEvaluationResults(int playersCount)
         {
-            deadCardMask |= boardCardMask;
-            deadCardMask = pocketsCardMasks.Aggregate(deadCardMask,
-                (current, pocketsCardMask) => current | pocketsCardMask);
-            return deadCardMask;
+            var evaluationResults = new EvaluationResult[playersCount];
+            for (var i = 0; i != playersCount; ++i)
+            {
+                evaluationResults[i] = new EvaluationResult();
+            }
+
+            return evaluationResults;
         }
 
-        private static IEnumerable<EvaluationResult> Evaluate(ICalculator calculator,
+        private static void Evaluate(ICalculator calculator,
             CardMask boardCardMask,
             CardMask enumeratedCardMask,
-            IEnumerable<CardMask> pocketsCardMasks)
+            IEnumerable<CardMask> pocketsCardMasks,
+            IList<EvaluationResult> evaluationResults)
         {
-            var evaluationResults = new Collection<EvaluationResult>();
             var bestHandValue = HandValue.Nothing;
             var highShare = 0;
             var lowShare = 0;
+            var index = 0;
 
-            foreach (var pocketsCardMask in pocketsCardMasks)
+            foreach (
+                var handValue in
+                    pocketsCardMasks.Select(
+                        pocketsCardMask => calculator.Evaluate(boardCardMask, enumeratedCardMask, pocketsCardMask)))
             {
-                var handValue = calculator.Evaluate(boardCardMask, enumeratedCardMask, pocketsCardMask);
-                var evaluationResult = new EvaluationResult {HandValue = handValue};
-
                 if (handValue.HighValue != HandValue.NothingHigh)
                 {
                     if (handValue.HighValue > bestHandValue.HighValue)
@@ -121,12 +245,11 @@ namespace Poker.Equity
                     }
                 }
 
-                evaluationResults.Add(evaluationResult);
+                evaluationResults[index].HandValue = handValue;
+                ++index;
             }
 
             CalculateExpectedValue(bestHandValue, highShare, lowShare, evaluationResults);
-
-            return evaluationResults;
         }
 
         private static void CalculateExpectedValue(HandValue bestHandValue,
@@ -200,6 +323,24 @@ namespace Poker.Equity
 
                 evaluationResult.ExpectedValue += potFraction;
             }
+        }
+
+        private static void CalculateProbability(long trialCount, IList<EvaluationResult> evaluationResults)
+        {
+            foreach (var evaluationResult in evaluationResults)
+            {
+                evaluationResult.Probability = (evaluationResult.ExpectedValue / trialCount) * 100.0F;
+            }
+        }
+
+        private static CardMask CombineCardMasks(CardMask boardCardMask,
+            CardMask deadCardMask,
+            IEnumerable<CardMask> pocketsCardMasks)
+        {
+            deadCardMask |= boardCardMask;
+            deadCardMask = pocketsCardMasks.Aggregate(deadCardMask,
+                (current, pocketsCardMask) => current | pocketsCardMask);
+            return deadCardMask;
         }
 
         public static PocketsDistribution ParsePocketsDistribution(string value, CardMask deadMask, IDeck deck)
@@ -374,6 +515,35 @@ namespace Poker.Equity
             }
 
             return value[2] == DefaultConnectorOffSuit;
+        }
+
+        private sealed class LocalState
+        {
+            internal CardMask BoardCardMask;
+            internal ICalculator Calculator;
+            internal CardMask DeadCardMask;
+            internal int PlayersCount;
+            internal IList<EvaluationResult> EvaluationResults;
+            internal long TrialCount;
+        }
+
+        private sealed class PocketsDistributionCollection : IEnumerable<IEnumerable<CardMask>>
+        {
+            private readonly IEnumerator<IEnumerable<CardMask>> _enumerator;
+
+            internal PocketsDistributionCollection(EnumerationType enumerationType,
+                IList<PocketsDistribution> pocketsDistributions,
+                CardMask deadCardMask)
+            {
+                _enumerator = enumerationType == EnumerationType.Exhaustive
+                    ? (IEnumerator<IEnumerable<CardMask>>)
+                        new ExhaustivePocketsDistributionsEnumerator(pocketsDistributions, deadCardMask)
+                    : new RandomPocketsDistributionsEnumerator(pocketsDistributions, deadCardMask);
+            }
+
+            public IEnumerator<IEnumerable<CardMask>> GetEnumerator() => _enumerator;
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
     }
 }

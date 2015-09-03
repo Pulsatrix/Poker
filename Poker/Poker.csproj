@@ -67,6 +67,7 @@
     <Compile Include="Enumeration\ExhaustiveDeckEnumerator.cs" />
     <Compile Include="Enumeration\RandomPocketsDistributionsEnumerator.cs" />
     <Compile Include="Equity\EquityManager.cs" />
+    <Compile Include="Equity\EquityUtilities.cs" />
     <Compile Include="Equity\HoldemCalculator.cs" />
     <Compile Include="Equity\ICalculator.cs" />
     <Compile Include="Equity\EvaluationResult.cs" />

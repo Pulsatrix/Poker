@@ -14,7 +14,7 @@ namespace Poker.Equity
 
         public IDeck Deck { get; } = new StandardDeck();
 
-        public EnumerationType EnumerationType { get; set; } = EnumerationType.Random;
+        public EnumerationType EnumerationType { get; set; } = EnumerationType.Undefined;
 
         public IEnumerator<CardMask> GetEnumerator(CardMask boardCardMask, CardMask deadCardMask)
         {
