@@ -2,8 +2,7 @@
 Poker hand evaluator, enumerator and equity calculator
 
 ## <a name='toc'>Table of Contents</a>
-  1. [At glance](#at-glance)
-  2. [Roadmap](#roadmap)
+   1. [Roadmap](#roadmap)
   
 Roadmap
 ---
