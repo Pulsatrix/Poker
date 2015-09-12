@@ -11,6 +11,7 @@ namespace Poker.Equity
 {
     public static class EquityManager
     {
+        private const char DefaultPocketsDistributionConcatenatedSetDelimiter = '|';
         private const char DefaultCardSetDelimiter = ',';
         private const char DefaultSlice = '-';
         private const char DefaultPlus = '+';
@@ -18,10 +19,25 @@ namespace Poker.Equity
         private const char DefaultConnectorOffSuit = 'o';
         private const string DefaultRandomSet = "XxXx";
 
+        public static IEnumerable<EvaluationResult> EnumerateAndEvaluate(ICalculator calculator,
+            string boardSet,
+            string deadSet,
+            string pocketsDistributionConcatenatedSets)
+        {
+            var pocketsDistributionSetsCollection =
+                SplitPocketsDistributions(pocketsDistributionConcatenatedSets);
+
+            var evaluationResults = EnumerateAndEvaluateDistribution(calculator,
+                boardSet,
+                deadSet,
+                pocketsDistributionSetsCollection);
+            return evaluationResults;
+        }
+
         public static IEnumerable<EvaluationResult> EnumerateAndEvaluateDistribution(ICalculator calculator,
             string boardSet,
             string deadSet,
-            IEnumerable<string> pocketsDistributionSets)
+            IEnumerable<string> pocketsDistributionSetsCollection)
         {
             if (calculator == null)
             {
@@ -32,16 +48,15 @@ namespace Poker.Equity
             var boardCardMask = deck.ParseCards(boardSet);
             var deadCardMask = deck.ParseCards(deadSet);
 
-            var pocketsCardMasks = new Collection<PocketsDistribution>();
-            foreach (var pocketsCardMask in pocketsDistributionSets.Select(pockets => deck.ParseCards(pockets)))
-            {
-                pocketsCardMasks.Add(pocketsCardMask);
-            }
+            var pocketsDistributions = ParsePocketsDistributions(boardCardMask,
+                deadCardMask,
+                pocketsDistributionSetsCollection,
+                deck);
 
             var evaluationResults = EnumerateAndEvaluateDistribution(calculator,
                 boardCardMask,
                 deadCardMask,
-                pocketsCardMasks);
+                pocketsDistributions);
             return evaluationResults;
         }
 
@@ -343,7 +358,55 @@ namespace Poker.Equity
             return deadCardMask;
         }
 
-        public static PocketsDistribution ParsePocketsDistribution(string value, CardMask deadMask, IDeck deck)
+        public static IEnumerable<string> SplitPocketsDistributions(
+            string pocketsDistributionConcatenatedSets)
+        {
+            var split = pocketsDistributionConcatenatedSets.Split(DefaultPocketsDistributionConcatenatedSetDelimiter);
+            return split;
+        }
+
+        public static IEnumerable<PocketsDistribution> ParsePocketsDistributions(CardMask boardCardMask,
+            CardMask deadCardMask,
+            IEnumerable<string> pocketsDistributionSetsCollection,
+            IDeck deck)
+        {
+            if (deck == null)
+            {
+                throw new ArgumentNullException(nameof(deck));
+            }
+
+            var deadMask = deadCardMask | boardCardMask;
+            var pocketsDistributions = new Collection<PocketsDistribution>();
+            var unprocessedTokens = new Dictionary<int, string>();
+
+            foreach (var token in pocketsDistributionSetsCollection)
+            {
+                CardMask cardMask;
+                if (deck.TryParseCards(token, out cardMask))
+                {
+                    var specificDistribution = new PocketsDistribution();
+                    specificDistribution.PocketsCardMasks.Add(cardMask);
+                    pocketsDistributions.Add(specificDistribution);
+                    deadMask |= cardMask;
+                }
+                else
+                {
+                    pocketsDistributions.Add(new PocketsDistribution());
+                    unprocessedTokens.Add(pocketsDistributions.Count - 1, token);
+                }
+            }
+
+            foreach (var token in unprocessedTokens)
+            {
+                pocketsDistributions[token.Key] = ParsePocketsDistribution(token.Value, deadMask, deck);
+            }
+
+            return pocketsDistributions;
+        }
+
+        public static PocketsDistribution ParsePocketsDistribution(string pocketsDistributionSets,
+            CardMask deadCardMask,
+            IDeck deck)
         {
             if (deck == null)
             {
@@ -352,18 +415,18 @@ namespace Poker.Equity
 
             var pocketsDistribution = new PocketsDistribution();
 
-            if (string.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(pocketsDistributionSets))
             {
                 return pocketsDistribution;
             }
 
-            var split = value.Split(DefaultCardSetDelimiter);
+            var split = pocketsDistributionSets.Split(DefaultCardSetDelimiter);
             foreach (var token in split)
             {
                 CardMask cardMask;
                 if (string.IsNullOrEmpty(token) || token.Equals(DefaultRandomSet))
                 {
-                    AddRandomHand(deadMask, deck, pocketsDistribution);
+                    AddRandomHand(deadCardMask, deck, pocketsDistribution);
                 }
                 else if (deck.TryParseCards(token, out cardMask))
                 {
@@ -374,7 +437,7 @@ namespace Poker.Equity
                 }
                 else
                 {
-                    ParseAgnosticHand(token, deadMask, deck, pocketsDistribution);
+                    ParseAgnosticHand(token, deadCardMask, deck, pocketsDistribution);
                 }
             }
 
@@ -387,9 +450,9 @@ namespace Poker.Equity
         ///     1,326 possibilities. If one or more dead cards are specified, that number will be
         ///     less.
         /// </summary>
-        private static void AddRandomHand(CardMask deadMask, IDeck deck, PocketsDistribution pocketsDistribution)
+        private static void AddRandomHand(CardMask deadCardMask, IDeck deck, PocketsDistribution pocketsDistribution)
         {
-            using (var cardExhaustiveCollection = new ExhaustiveDeckEnumerator(deck, 2, deadMask))
+            using (var cardExhaustiveCollection = new ExhaustiveDeckEnumerator(deck, 2, deadCardMask))
             {
                 while (cardExhaustiveCollection.MoveNext())
                 {
@@ -407,7 +470,7 @@ namespace Poker.Equity
         ///     constituent specific Hold'em hands.
         /// </summary>
         private static void ParseAgnosticHand(string value,
-            CardMask deadMask,
+            CardMask deadCardMask,
             IDeck deck,
             PocketsDistribution pocketsDistribution)
         {
@@ -468,7 +531,7 @@ namespace Poker.Equity
                         var cardMask2 = deck.ToCardMask(deck.ToCardIndex(deck.ToRank(rank2), deck.ToSuit(suit2)));
                         var cardMask = cardMask1 | cardMask2;
 
-                        if (!CardMask.IsAnySameCardSet(deadMask, cardMask) &&
+                        if (!CardMask.IsAnySameCardSet(deadCardMask, cardMask) &&
                             !pocketsDistribution.PocketsCardMasks.Contains(cardMask))
                         {
                             pocketsDistribution.PocketsCardMasks.Add(cardMask);
