@@ -67,7 +67,7 @@ namespace Poker.Deck
 
         public bool TryParseCards(string value, out CardMask cardMask)
         {
-            var result = Parse(value, true, null, out cardMask);
+            var result = Parse(value, false, null, out cardMask);
             return result;
         }
 
@@ -104,10 +104,10 @@ namespace Poker.Deck
             const int stateRank = 0x0001;
             const int stateSuit = 0x0002;
             var state = stateRank;
+            var cardRank = CardRank.Undefined;
 
             foreach (var symbol in value.Where(c => !char.IsWhiteSpace(c)))
             {
-                var cardRank = CardRank.Undefined;
                 CardSuit cardSuit;
 
                 switch (state)

@@ -24,21 +24,6 @@ namespace Poker.Equity
             string deadSet,
             string pocketsDistributionConcatenatedSets)
         {
-            var pocketsDistributionSetsCollection =
-                SplitPocketsDistributions(pocketsDistributionConcatenatedSets);
-
-            var evaluationResults = EnumerateAndEvaluateDistribution(calculator,
-                boardSet,
-                deadSet,
-                pocketsDistributionSetsCollection);
-            return evaluationResults;
-        }
-
-        public static IEnumerable<EvaluationResult> EnumerateAndEvaluateDistribution(ICalculator calculator,
-            string boardSet,
-            string deadSet,
-            IEnumerable<string> pocketsDistributionSetsCollection)
-        {
             if (calculator == null)
             {
                 throw new ArgumentNullException(nameof(calculator));
@@ -48,10 +33,10 @@ namespace Poker.Equity
             var boardCardMask = deck.ParseCards(boardSet);
             var deadCardMask = deck.ParseCards(deadSet);
 
-            var pocketsDistributions = ParsePocketsDistributions(boardCardMask,
+            var pocketsDistributions = ParsePocketsDistributions(deck,
+                boardCardMask,
                 deadCardMask,
-                pocketsDistributionSetsCollection,
-                deck);
+                pocketsDistributionConcatenatedSets);
 
             var evaluationResults = EnumerateAndEvaluateDistribution(calculator,
                 boardCardMask,
@@ -73,9 +58,26 @@ namespace Poker.Equity
             var pockets = pocketsDistributions.ToList();
             var evaluationResults = InitEvaluationResults(pockets.Count);
 
-            //EnumerateAndEvaluate(calculator, boardCardMask, deadCardMask, pockets, evaluationResults);
+            EnumerateAndEvaluateDistribution(calculator, boardCardMask, deadCardMask, pockets, evaluationResults);
 
             return evaluationResults;
+        }
+
+        private static void EnumerateAndEvaluateDistribution(ICalculator calculator,
+            CardMask boardCardMask,
+            CardMask deadCardMask,
+            IList<PocketsDistribution> pocketsDistributions,
+            IList<EvaluationResult> evaluationResults)
+        {
+            var pocketsDistributionCollection = new PocketsDistributionCollection(calculator.EnumerationType,
+                pocketsDistributions,
+                deadCardMask);
+            var trialCount = 0L;
+            var localState = InitLocalState(calculator, boardCardMask, deadCardMask, pocketsDistributions.Count);
+            localState = pocketsDistributionCollection.Aggregate(localState,
+                (current, pocketsCollection) => EnumerateAndEvaluate(pocketsCollection, current));
+            UpdateEvaluationResults(localState, evaluationResults, ref trialCount);
+            CalculateProbability(trialCount, evaluationResults);
         }
 
         public static IEnumerable<EvaluationResult> EnumerateAndEvaluate(ICalculator calculator,
@@ -123,7 +125,7 @@ namespace Poker.Equity
         private static void EnumerateAndEvaluate(ICalculator calculator,
             CardMask boardCardMask,
             CardMask deadCardMask,
-            List<CardMask> pockets,
+            ICollection<CardMask> pockets,
             IList<EvaluationResult> evaluationResults)
         {
             var trialCount = 0L;
@@ -150,7 +152,7 @@ namespace Poker.Equity
             return localState;
         }
 
-        private static LocalState EnumerateAndEvaluate(List<CardMask> pockets, LocalState localState)
+        private static LocalState EnumerateAndEvaluate(IEnumerable<CardMask> pockets, LocalState localState)
         {
             var calculator = localState.Calculator;
             if (calculator.EnumerationType == EnumerationType.Undefined)
@@ -229,10 +231,9 @@ namespace Poker.Equity
             var lowShare = 0;
             var index = 0;
 
-            foreach (
-                var handValue in
-                    pocketsCardMasks.Select(
-                        pocketsCardMask => calculator.Evaluate(boardCardMask, enumeratedCardMask, pocketsCardMask)))
+            foreach (var handValue in
+                pocketsCardMasks.Select(
+                    pocketsCardMask => calculator.Evaluate(boardCardMask, enumeratedCardMask, pocketsCardMask)))
             {
                 if (handValue.HighValue != HandValue.NothingHigh)
                 {
@@ -344,7 +345,7 @@ namespace Poker.Equity
         {
             foreach (var evaluationResult in evaluationResults)
             {
-                evaluationResult.Probability = (evaluationResult.ExpectedValue / trialCount) * 100.0F;
+                evaluationResult.Probability = (evaluationResult.ExpectedValue/trialCount)*100.0F;
             }
         }
 
@@ -358,22 +359,23 @@ namespace Poker.Equity
             return deadCardMask;
         }
 
-        public static IEnumerable<string> SplitPocketsDistributions(
-            string pocketsDistributionConcatenatedSets)
-        {
-            var split = pocketsDistributionConcatenatedSets.Split(DefaultPocketsDistributionConcatenatedSetDelimiter);
-            return split;
-        }
-
-        public static IEnumerable<PocketsDistribution> ParsePocketsDistributions(CardMask boardCardMask,
+        public static IEnumerable<PocketsDistribution> ParsePocketsDistributions(IDeck deck,
+            CardMask boardCardMask,
             CardMask deadCardMask,
-            IEnumerable<string> pocketsDistributionSetsCollection,
-            IDeck deck)
+            string pocketsDistributionConcatenatedSets)
         {
             if (deck == null)
             {
                 throw new ArgumentNullException(nameof(deck));
             }
+
+            if (pocketsDistributionConcatenatedSets == null)
+            {
+                throw new ArgumentNullException(nameof(pocketsDistributionConcatenatedSets));
+            }
+
+            var pocketsDistributionSetsCollection =
+                pocketsDistributionConcatenatedSets.Split(DefaultPocketsDistributionConcatenatedSetDelimiter);
 
             var deadMask = deadCardMask | boardCardMask;
             var pocketsDistributions = new Collection<PocketsDistribution>();
@@ -384,14 +386,14 @@ namespace Poker.Equity
                 CardMask cardMask;
                 if (deck.TryParseCards(token, out cardMask))
                 {
-                    var specificDistribution = new PocketsDistribution();
+                    var specificDistribution = new PocketsDistribution(token);
                     specificDistribution.PocketsCardMasks.Add(cardMask);
                     pocketsDistributions.Add(specificDistribution);
                     deadMask |= cardMask;
                 }
                 else
                 {
-                    pocketsDistributions.Add(new PocketsDistribution());
+                    pocketsDistributions.Add(null);
                     unprocessedTokens.Add(pocketsDistributions.Count - 1, token);
                 }
             }
@@ -413,7 +415,7 @@ namespace Poker.Equity
                 throw new ArgumentNullException(nameof(deck));
             }
 
-            var pocketsDistribution = new PocketsDistribution();
+            var pocketsDistribution = new PocketsDistribution(pocketsDistributionSets);
 
             if (string.IsNullOrEmpty(pocketsDistributionSets))
             {
@@ -437,7 +439,7 @@ namespace Poker.Equity
                 }
                 else
                 {
-                    ParseAgnosticHand(token, deadCardMask, deck, pocketsDistribution);
+                    ParseRange(token, deadCardMask, deck, pocketsDistribution);
                 }
             }
 
@@ -469,7 +471,7 @@ namespace Poker.Equity
         ///     with an optional collection of "dead" cards, and boil it down into its
         ///     constituent specific Hold'em hands.
         /// </summary>
-        private static void ParseAgnosticHand(string value,
+        private static void ParseRange(string value,
             CardMask deadCardMask,
             IDeck deck,
             PocketsDistribution pocketsDistribution)
@@ -495,8 +497,8 @@ namespace Poker.Equity
             {
                 floor1 = deck.ToRankIndex(deck.ParseCardRank(value[0]));
                 floor2 = deck.ToRankIndex(deck.ParseCardRank(value[1]));
-                ceil1 = plus > 0 ? deck.ToRankIndex(CardRank.Ace) : floor1;
-                ceil2 = deck.ToRankIndex(CardRank.King);
+                ceil1 = (plus > 0) && (floor1 - floor2 <= 1) ? deck.ToRankIndex(CardRank.Ace) : floor1;
+                ceil2 = (plus > 0) && (floor1 - floor2 <= 1) ? deck.ToRankIndex(CardRank.King) : floor1 - 1;
             }
 
             var isPair = IsPair(value);
@@ -511,7 +513,10 @@ namespace Poker.Equity
 
             // If a range like "A4s+" was specified, increment only the
             // bottom card ie, "A4s, A5s, A6s, ..., AQs, AKs
-            var rank1Step = (plus > 0 || slice > 0) && floor1 == deck.ToRankIndex(CardRank.Ace) ? 0 : 1;
+            var rank1Step = (plus > 0 || slice > 0) &&
+                (floor1 == deck.ToRankIndex(CardRank.Ace) || (floor1 - floor2 > 1 && floor1 == ceil1))
+                ? 0
+                : 1;
 
             for (int rank1 = floor1, rank2 = floor2; rank1 <= ceil1 && rank2 <= ceil2; rank1 += rank1Step, ++rank2)
             {
@@ -585,8 +590,8 @@ namespace Poker.Equity
             internal CardMask BoardCardMask;
             internal ICalculator Calculator;
             internal CardMask DeadCardMask;
-            internal int PlayersCount;
             internal IList<EvaluationResult> EvaluationResults;
+            internal int PlayersCount;
             internal long TrialCount;
         }
 
